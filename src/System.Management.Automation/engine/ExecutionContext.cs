@@ -525,7 +525,7 @@ namespace System.Management.Automation
             {
                 if (val is ActionPreference actionPreferenceValue)
                 {
-                    CheckActionPreference(preferenceVariablePath, actionPreferenceValue, defaultPref);
+                    CheckActionPreference(preferenceVariablePath, actionPreferenceValue);
                 }
 
                 T convertedResult = (T)val;
@@ -555,7 +555,7 @@ namespace System.Management.Automation
 
                     if (result is ActionPreference actionPreferenceValue)
                     {
-                        CheckActionPreference(preferenceVariablePath, actionPreferenceValue, defaultPref);
+                        CheckActionPreference(preferenceVariablePath, actionPreferenceValue);
                     }
                 }
                 catch (InvalidCastException)
@@ -571,15 +571,12 @@ namespace System.Management.Automation
             return result;
         }
 
-        private void CheckActionPreference(VariablePath preferenceVariablePath, ActionPreference preference, object defaultValue)
+        private void CheckActionPreference(VariablePath preferenceVariablePath, ActionPreference preference)
         {
             if (preference == ActionPreference.Suspend)
             {
-                // ActionPreference.Suspend is reserved for future use. When it is used, reset
-                // the variable to its default.
-                string message = StringUtil.Format(ErrorPackage.ReservedActionPreferenceReplacedError, preference, preferenceVariablePath.UserPath, defaultValue);
-                EngineSessionState.SetVariable(preferenceVariablePath, defaultValue, true, CommandOrigin.Internal);
-                throw new NotSupportedException(message);
+                // ActionPreference.Suspend follows the same behavior as ActionPreference.Break.
+                EngineSessionState.SetVariable(preferenceVariablePath, ActionPreference.Break, true, CommandOrigin.Internal);
             }
         }
 

@@ -118,20 +118,18 @@ Describe "Tests for (error, warning, etc) action preference" -Tags "CI" {
         $e.CategoryInfo.Reason | Should -BeExactly 'ArgumentTransformationMetadataException'
     }
 
-    It 'A local $<ActionPreferenceVariableName> variable does not support <DisplayValue>' -TestCases (Join-TestCase -Set1 $actionPreferenceVariableTestCases -Set2 $actionPreferenceVariableValueTestCases) {
+    It 'A local $<ActionPreferenceVariableName> variable with Suspend is normalized to Break' -TestCases $actionPreferenceVariableTestCases {
         param(
-            $ActionPreferenceVariableName,
-            $StreamName,
-            $Value,
-            $DisplayValue
+            $ActionPreferenceVariableName
         )
 
-        $e = {
-            Set-Variable -Name $ActionPreferenceVariableName -Value $Value
-            Test-ActionPreferenceVariableSuspendValue -Value $Value
-        } | Should -Throw -ErrorId "System.NotSupportedException$(if ($StreamName -ne 'Error') {",Microsoft.PowerShell.Commands.Write${StreamName}Command"})" -PassThru
-
-        $e.CategoryInfo.Reason | Should -BeExactly 'NotSupportedException'
+        try {
+            Set-Variable -Name $ActionPreferenceVariableName -Value ([System.Management.Automation.ActionPreference]::Suspend)
+            $actual = Invoke-Expression ('$' + $ActionPreferenceVariableName)
+            $actual | Should -BeExactly [System.Management.Automation.ActionPreference]::Break
+        } finally {
+            Remove-Variable -Name $ActionPreferenceVariableName -ErrorAction SilentlyContinue
+        }
     }
 
     It 'enum disambiguation works' {
